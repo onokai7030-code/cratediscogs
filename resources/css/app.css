@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-crate: #f5b942;
+}
+
+@layer components {
+    .panel { @apply rounded-2xl border border-white/8 bg-white/[.035] shadow-2xl shadow-black/10; }
+    .field { @apply w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-amber-300/50 focus:ring-2 focus:ring-amber-300/10; }
+    .label { @apply mb-1.5 block text-[11px] font-semibold uppercase tracking-[.14em] text-zinc-500; }
+    .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition hover:bg-amber-200 disabled:cursor-wait disabled:opacity-50; }
+    .btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-zinc-200 transition hover:border-white/20 hover:bg-white/10; }
+    .badge { @apply inline-flex rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-zinc-400; }
+    .data-table { @apply w-full min-w-[960px] border-separate border-spacing-0 text-left text-sm; }
+    .data-table thead { @apply table-header-group bg-[#101217]; }
+    .data-table th { @apply border-b border-white/10 px-3 py-3 text-[10px] font-semibold uppercase tracking-[.12em] text-zinc-500; }
+    .data-table td { @apply border-b border-white/[.055] px-3 py-3 align-top text-zinc-300; }
+    .data-table tbody tr { @apply transition hover:bg-white/[.035]; }
+}
