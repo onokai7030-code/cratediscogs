@@ -57,6 +57,7 @@ it('searches persists and renders escaped Discogs releases', function () {
             'style' => ['Deep House'],
             'community' => ['have' => 10, 'want' => 30],
             'uri' => '/release/501',
+            'cover_image' => 'https://i.discogs.com/example/cover.jpg',
         ]],
     ])]);
 
@@ -66,7 +67,9 @@ it('searches persists and renders escaped Discogs releases', function () {
         ->call('search')
         ->assertSet('style', 'Deep House')
         ->assertSet('genre', 'Electronic')
+        ->assertSet('results.0.image_url', 'https://i.discogs.com/example/cover.jpg')
         ->assertSee('Track')
+        ->assertSee('Copertina di &lt;script&gt;alert(1)&lt;/script&gt; — Track', escape: false)
         ->assertDontSeeHtml('<script>alert(1)</script>');
 
     $this->assertDatabaseHas('releases', ['discogs_id' => 501]);

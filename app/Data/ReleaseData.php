@@ -20,6 +20,7 @@ readonly class ReleaseData
         public int $have,
         public int $want,
         public string $url,
+        public ?string $imageUrl = null,
     ) {}
 
     public static function fromSearchResult(array $result): self
@@ -40,6 +41,7 @@ readonly class ReleaseData
             have: (int) data_get($result, 'community.have', 0),
             want: (int) data_get($result, 'community.want', 0),
             url: 'https://www.discogs.com'.($result['uri'] ?? "/release/{$result['id']}"),
+            imageUrl: self::imageUrl($result),
         );
     }
 
@@ -66,6 +68,7 @@ readonly class ReleaseData
             'want' => $this->want,
             'want_ratio' => $this->wantRatio(),
             'url' => $this->url,
+            'image_url' => $this->imageUrl,
         ];
     }
 
@@ -86,7 +89,20 @@ readonly class ReleaseData
             have: (int) $data['have'],
             want: (int) $data['want'],
             url: (string) $data['url'],
+            imageUrl: filled($data['image_url'] ?? null) ? (string) $data['image_url'] : null,
         );
+    }
+
+    /** @param array<string, mixed> $result */
+    private static function imageUrl(array $result): ?string
+    {
+        $imageUrl = $result['cover_image'] ?? $result['thumb'] ?? null;
+
+        if (! is_string($imageUrl) || ! str_starts_with($imageUrl, 'https://')) {
+            return null;
+        }
+
+        return $imageUrl;
     }
 
     private static function splitTitle(string $combined): array
