@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('seen_releases', function (Blueprint $table) {
+            $table->index('release_id');
             $table->dropUnique(['release_id']);
             $table->unique(['user_id', 'release_id']);
         });
@@ -25,6 +26,7 @@ return new class extends Migration
         Schema::table('seen_releases', function (Blueprint $table) {
             $table->dropUnique(['user_id', 'release_id']);
             $table->unique('release_id');
+            $table->dropIndex(['release_id']);
         });
     }
 };
