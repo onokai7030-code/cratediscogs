@@ -2,6 +2,7 @@
 
 use App\Services\Discogs\DiscogsClient;
 use Illuminate\Http\Client\Request;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
@@ -96,6 +97,16 @@ it('retries 429 responses with backoff instead of failing', function () {
     expect($release['id'])->toBe(99);
     Http::assertSentCount(2);
     Sleep::assertSlept(fn ($duration) => $duration->totalMilliseconds === 2000.0);
+});
+
+it('stops retrying after repeated rate limit responses', function () {
+    Sleep::fake();
+    Http::fake(['*' => Http::response(['message' => 'rate limit exceeded'], 429)]);
+
+    expect(fn () => app(DiscogsClient::class)->release(99))
+        ->toThrow(RequestException::class);
+    Http::assertSentCount(5);
+    Sleep::assertSleptTimes(4);
 });
 
 it('slows subsequent requests when the remaining quota is low', function () {

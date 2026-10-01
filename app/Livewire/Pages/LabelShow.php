@@ -65,8 +65,8 @@ class LabelShow extends Component
                 styles: collect(explode(',', $validated['styles'] ?? ''))->map(fn (string $style): string => trim($style))->filter()->values()->all(),
                 fresh: $this->fresh,
             ));
-            $catalog = $this->hideSeen ? $persister->withoutSeen($data->catalog) : $data->catalog;
-            $persister->persistSearch('label', $validated['label'], $validated, $catalog);
+            $catalog = $this->hideSeen ? $persister->withoutSeen($data->catalog, auth()->user()) : $data->catalog;
+            $persister->persistSearch('label', $validated['label'], $validated, $catalog, auth()->user());
             $this->details = [
                 'id' => $data->label->id,
                 'name' => $data->label->name,
@@ -90,6 +90,7 @@ class LabelShow extends Component
         }
 
         $exploration = LabelExploration::create([
+            'user_id' => auth()->id(),
             'discogs_label_id' => $this->details['id'],
             'label_name' => $this->details['name'],
             'status' => 'pending',
@@ -102,7 +103,7 @@ class LabelShow extends Component
 
     public function markSeen(int $discogsId, ReleasePersister $persister): void
     {
-        $persister->markDiscogsReleaseSeen($discogsId);
+        $persister->markDiscogsReleaseSeen($discogsId, auth()->user());
         session()->flash('status', 'Release segnata come vista.');
     }
 
@@ -127,7 +128,9 @@ class LabelShow extends Component
     public function render(): View
     {
         return view('livewire.pages.label-show', [
-            'exploration' => $this->explorationId === null ? null : LabelExploration::find($this->explorationId),
+            'exploration' => $this->explorationId === null
+                ? null
+                : LabelExploration::query()->whereBelongsTo(auth()->user())->find($this->explorationId),
         ])->title('Label · Crate');
     }
 }

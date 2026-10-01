@@ -4,6 +4,7 @@ use App\Data\LabelMapData;
 use App\Data\ReleaseData;
 use App\Models\Genre;
 use App\Models\Style;
+use App\Models\User;
 use App\Services\Export\CsvExporter;
 use App\Services\Persistence\ReleasePersister;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -61,6 +62,20 @@ it('marks displayed releases and removes them from later hidden results', functi
 
     expect($persister->withoutSeen([$release]))->toBe([]);
     $this->assertDatabaseCount('seen_releases', 1);
+});
+
+it('keeps seen releases isolated between users', function () {
+    $firstUser = User::factory()->create();
+    $secondUser = User::factory()->create();
+    $release = persistenceReleaseData();
+    $persister = app(ReleasePersister::class);
+    $persister->persistSearch('dig', 'Deep House', [], [$release], $firstUser);
+
+    $persister->markSeen([$release], $firstUser);
+
+    expect($persister->withoutSeen([$release], $firstUser))->toBe([])
+        ->and($persister->withoutSeen([$release], $secondUser))->toBe([$release]);
+    $this->assertDatabaseHas('seen_releases', ['user_id' => $firstUser->id]);
 });
 
 it('exports release and label CSV files with stable headers and safe spreadsheet cells', function () {

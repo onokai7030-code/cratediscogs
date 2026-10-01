@@ -21,6 +21,7 @@ class History extends Component
     public function render(): View
     {
         $searches = Search::query()
+            ->whereBelongsTo(auth()->user())
             ->with(['releases' => fn ($query) => $query->orderBy('release_search.position')->limit(5)])
             ->when($this->type !== 'all', fn ($query) => $query->where('type', $this->type))
             ->orderByDesc('created_at')

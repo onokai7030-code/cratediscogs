@@ -12,6 +12,8 @@ class DiscogsClient
 {
     private const PAGE_SIZE = 100;
 
+    private const MAX_RATE_LIMIT_ATTEMPTS = 5;
+
     private ?int $rateLimitRemaining = null;
 
     public function search(array $parameters, bool $fresh = false): array
@@ -127,6 +129,11 @@ class DiscogsClient
             }
 
             $attempt++;
+
+            if ($attempt >= self::MAX_RATE_LIMIT_ATTEMPTS) {
+                return $response->throw();
+            }
+
             Sleep::for($this->retryDelayMilliseconds($response, $attempt))->milliseconds();
         } while (true);
     }

@@ -8,6 +8,7 @@ use App\Models\Release;
 use App\Models\Search;
 use App\Models\SeenRelease;
 use App\Models\Style;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -17,14 +18,15 @@ class ReleasePersister
      * @param  array<string, mixed>  $parameters
      * @param  array<ReleaseData>  $releases
      */
-    public function persistSearch(string $type, string $query, array $parameters, array $releases): Search
+    public function persistSearch(string $type, string $query, array $parameters, array $releases, ?User $user = null): Search
     {
         $uniqueReleases = collect($releases)
             ->unique(fn (ReleaseData $release): int => $release->id)
             ->values();
 
-        return DB::transaction(function () use ($type, $query, $parameters, $uniqueReleases): Search {
+        return DB::transaction(function () use ($type, $query, $parameters, $uniqueReleases, $user): Search {
             $search = Search::create([
+                'user_id' => $user?->id,
                 'type' => $type,
                 'query' => $query,
                 'parameters' => $parameters,
@@ -41,9 +43,10 @@ class ReleasePersister
     }
 
     /** @param array<string, mixed> $parameters */
-    public function recordSearch(string $type, string $query, array $parameters, int $resultCount): Search
+    public function recordSearch(string $type, string $query, array $parameters, int $resultCount, ?User $user = null): Search
     {
         return Search::create([
+            'user_id' => $user?->id,
             'type' => $type,
             'query' => $query,
             'parameters' => $parameters,
@@ -55,11 +58,13 @@ class ReleasePersister
      * @param  array<ReleaseData>  $releases
      * @return array<ReleaseData>
      */
-    public function withoutSeen(array $releases): array
+    public function withoutSeen(array $releases, ?User $user = null): array
     {
         $seenDiscogsIds = Release::query()
             ->whereIn('discogs_id', array_column($releases, 'id'))
-            ->whereHas('seen')
+            ->whereHas('seenReleases', fn ($query) => $user === null
+                ? $query->whereNull('user_id')
+                : $query->whereBelongsTo($user))
             ->pluck('discogs_id')
             ->all();
 
@@ -70,7 +75,7 @@ class ReleasePersister
     }
 
     /** @param array<ReleaseData> $releases */
-    public function markSeen(array $releases): void
+    public function markSeen(array $releases, ?User $user = null): void
     {
         if ($releases === []) {
             return;
@@ -81,17 +86,23 @@ class ReleasePersister
             ->pluck('id');
 
         foreach ($releaseIds as $releaseId) {
-            $seenRelease = SeenRelease::query()->firstOrNew(['release_id' => $releaseId]);
+            $seenRelease = SeenRelease::query()->firstOrNew([
+                'release_id' => $releaseId,
+                'user_id' => $user?->id,
+            ]);
             $seenRelease->first_seen_at ??= now();
             $seenRelease->last_seen_at = now();
             $seenRelease->save();
         }
     }
 
-    public function markDiscogsReleaseSeen(int $discogsId): void
+    public function markDiscogsReleaseSeen(int $discogsId, ?User $user = null): void
     {
         $release = Release::query()->where('discogs_id', $discogsId)->firstOrFail();
-        $seenRelease = SeenRelease::query()->firstOrNew(['release_id' => $release->id]);
+        $seenRelease = SeenRelease::query()->firstOrNew([
+            'release_id' => $release->id,
+            'user_id' => $user?->id,
+        ]);
         $seenRelease->first_seen_at ??= now();
         $seenRelease->last_seen_at = now();
         $seenRelease->save();

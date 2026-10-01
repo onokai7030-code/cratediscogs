@@ -135,10 +135,10 @@ class Dig extends Component
             }
 
             if ($this->hideSeen) {
-                $releases = array_slice($persister->withoutSeen($releases), 0, $validated['limit']);
+                $releases = array_slice($persister->withoutSeen($releases, auth()->user()), 0, $validated['limit']);
             }
 
-            $persister->persistSearch('dig', $this->style, $validated, $releases);
+            $persister->persistSearch('dig', $this->style, $validated, $releases, auth()->user());
             $this->results = array_map(fn (ReleaseData $release): array => $release->toArray(), $releases);
             $this->page = 1;
         } catch (UnknownTaxonomyTerm|InvalidArgumentException $exception) {
@@ -168,7 +168,7 @@ class Dig extends Component
 
     public function markSeen(int $discogsId, ReleasePersister $persister): void
     {
-        $persister->markDiscogsReleaseSeen($discogsId);
+        $persister->markDiscogsReleaseSeen($discogsId, auth()->user());
         session()->flash('status', 'Release segnata come vista.');
     }
 

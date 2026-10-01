@@ -6,7 +6,7 @@ use Database\Factories\ReleaseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Release extends Model
 {
@@ -54,8 +54,8 @@ class Release extends Model
         return $this->belongsToMany(Search::class)->withPivot('position');
     }
 
-    public function seen(): HasOne
+    public function seenReleases(): HasMany
     {
-        return $this->hasOne(SeenRelease::class);
+        return $this->hasMany(SeenRelease::class);
     }
 }

@@ -83,7 +83,7 @@ class Labels extends Component
                 $this->labelName = $exactLabel['name'];
             }
 
-            $persister->recordSearch('labels', $this->style, $validated, count($labels));
+            $persister->recordSearch('labels', $this->style, $validated, count($labels), auth()->user());
         } catch (UnknownTaxonomyTerm|InvalidArgumentException $exception) {
             $this->error = $exception->getMessage();
             $this->labels = [];
